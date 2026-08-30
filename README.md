@@ -29,7 +29,7 @@ operator :1346 POST /proposals/:ref/decide ─┤ named operator
 | 番号検索 | Telnyx API v2 実装済み。mock で HTTP 実測済み |
 | Passkey 同意 hand-off | `cloud-itonami-app :number` と配線済み |
 | operator gate | 別 listener・別 token、実装/実測済み |
-| Telnyx 発注・状態解釈 | 実装済み。実アカウントでは未実行 |
+| Telnyx 発注・状態照合 | 実装済み。pending order の operator 再照合を含む。実アカウントでは未実行 |
 | agent/bot への routing record | 実装/永続化/resolve API 実測済み |
 | 解放 | Telnyx delete 実装。local record は即再利用せず quarantine |
 | 実番号・本番 credential・課金 | **未実行** |
@@ -57,6 +57,7 @@ operator が承認しても provider が無い、失敗した、pending の場�
 |---|---|---|
 | `GET /healthz` | open | listener health |
 | `POST /proposals/:ref/decide` | `X-NUMBER-OPERATOR-TOKEN` | `approve` / `reject`。`by` 必須 |
+| `POST /proposals/:ref/reconcile` | same | Telnyx pending order を order id で再照合。`by` 必須 |
 
 Consent listener には decide route がありません。token を共有しても到達できないのではなく、
 HTTP surface 自体が分離されています。
@@ -105,10 +106,11 @@ Provider 契約の正本:
 
 ## Crash and retry boundary
 
-provider call の前に proposal を `actuating` として永続化します。そこで process が落ちた場合、
-自動再発注はしません。同じ reference で二重購入するより、Telnyx の
-`customer_reference` から operator が既存 order を照合する方へ倒しています。
-自動 reconciliation は次の maturity slice です。
+provider が pending を返した場合は order id を保存し、operator surface の `reconcile` が
+`GET /number_orders/:id` だけを実行します。2つ目の order は作りません。provider call の
+送信後、response を保存する前に process が落ちた場合も自動再発注はせず、Telnyx の
+`customer_reference` から operator が既存 order を照合します。この interrupted-call の
+自動発見と shared persistence は次の maturity slice です。
 
 ## Reuse
 
@@ -129,4 +131,3 @@ nbb --classpath ".:../../../../scripts:../../../../scripts/nbb_compat" \
 ## License
 
 GNU Affero General Public License v3.0 or later. See `LICENSE`.
-

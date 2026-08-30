@@ -141,6 +141,43 @@
          :effect {:reference reference :op op :request request}
          :response {:status "actuating" :reference reference}}))))
 
+(defn reconcile-order
+  "Resume an already-created Telnyx order by its provider order id.
+
+  This is operator-only at the HTTP edge. It never creates a second order: the
+  only effect it can return is GET /number_orders/:id for a proposal whose last
+  provider outcome was pending."
+  [state reference {:keys [by]} now-ms]
+  (let [p (store/proposal state reference)
+        refusal (:numbering.proposal/refusal p)
+        order-id (:provider-order-id refusal)]
+    (cond
+      (nil? p)
+      {:state state :response {:status "unknown" :detail "proposal not found"}}
+
+      (= :committed (:numbering.proposal/status p))
+      {:state state :response {:status "committed"
+                               :record (:numbering.proposal/record p)}}
+
+      (or (not (string? by)) (str/blank? by))
+      {:state state :response {:status "held" :refusal {:rule :operator/by-missing}}}
+
+      (not (and (= :approved-not-actuated (:numbering.proposal/status p))
+                (= :provider-pending (:rule refusal))
+                (string? order-id) (not (str/blank? order-id))))
+      {:state state :response {:status "held"
+                               :refusal {:rule :provider/order-not-reconcilable}}}
+
+      :else
+      {:state (store/update-proposal state reference merge
+                                     {:numbering.proposal/status :actuating
+                                      :numbering.proposal/reconciled-by by
+                                      :numbering.proposal/changed-at (now-string now-ms)})
+       :effect {:reference reference
+                :op :number/allocate-status
+                :request (telnyx/order-status-request order-id)}
+       :response {:status "actuating" :reference reference}})))
+
 (defn complete
   [state {:keys [reference op]} provider-result now-ms]
   (let [p (store/proposal state reference)]
@@ -163,7 +200,7 @@
                     :decided-by (:numbering.proposal/decided-by p)
                     :refusal refusal}})
 
-      (= :number/allocate op)
+      (contains? #{:number/allocate :number/allocate-status} op)
       (let [outcome (telnyx/order-outcome (:payload provider-result))
             value (:numbering.proposal/value p)]
         (if (and (= :success (:status outcome)) (:requirements-met? outcome))

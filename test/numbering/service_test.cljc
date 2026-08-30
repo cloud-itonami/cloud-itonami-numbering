@@ -117,6 +117,36 @@
     (is (= "committed" (get-in retry [:response :status])))
     (is (nil? (:effect retry)) "a repeated approval must not place a second order")))
 
+(deftest pending-order-is-reconciled-without-a-second-purchase
+  (let [accepted (service/accept (store/empty-state) (proposal "p-pending") now policy)
+        started (service/decide (:state accepted) "p-pending"
+                                {:decision :approve :by "operator@example"}
+                                now configured)
+        pending-result {:ok? true :status 200
+                        :payload {:data {:id "order-pending-1"
+                                         :status "pending"
+                                         :requirements_met false
+                                         :phone_numbers []}}}
+        pending (service/complete (:state started) (:effect started)
+                                  pending-result (inc now))
+        resumed (service/reconcile-order (:state pending) "p-pending"
+                                         {:by "operator@example"} (+ now 2))
+        completed (service/complete (:state resumed) (:effect resumed)
+                                    (provider/mock-execute (:effect resumed)) (+ now 3))
+        retry (service/reconcile-order (:state completed) "p-pending"
+                                       {:by "operator@example"} (+ now 4))]
+    (is (= "approved-not-actuated" (get-in pending [:response :status])))
+    (is (= "order-pending-1"
+           (get-in pending [:response :refusal :provider-order-id])))
+    (is (= :number/allocate-status (get-in resumed [:effect :op])))
+    (is (str/ends-with? (get-in resumed [:effect :request :url])
+                        "/number_orders/order-pending-1"))
+    (is (= "committed" (get-in completed [:response :status])))
+    (is (= :assigned (:phone/state (store/number (:state completed)
+                                                  "+815012340001"))))
+    (is (= "committed" (get-in retry [:response :status])))
+    (is (nil? (:effect retry)))))
+
 (deftest release-is-owned-gated-and-quarantined
   (let [allocated (allocate-state)
         wrong (service/accept allocated
@@ -149,4 +179,3 @@
     (is (false? (:ok? result)))
     (is (= 503 (:status result)))
     (is (not (contains? result :api-key)))))
-

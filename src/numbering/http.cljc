@@ -125,10 +125,21 @@
        {:ok? false :status 503 :error "NUMBERING_ACTUATOR is not configured"})))
 
 #?(:clj
-   (defn- decide! [reference body]
+(defn- decide! [reference body]
      (let [started (transact! #(service/decide % reference body
                                                (System/currentTimeMillis)
                                                (provider-config)))]
+       (if-let [effect (:effect started)]
+         (let [provider-result (execute-effect! effect)]
+           (:response
+            (transact! #(service/complete % effect provider-result
+                                          (System/currentTimeMillis)))))
+         (:response started)))))
+
+#?(:clj
+   (defn- reconcile-order! [reference body]
+     (let [started (transact! #(service/reconcile-order % reference body
+                                                         (System/currentTimeMillis)))]
        (if-let [effect (:effect started)]
          (let [provider-result (execute-effect! effect)]
            (:response
@@ -223,10 +234,17 @@
          (if-let [{:keys [status body]}
                   (token-result exchange "NUMBER_OPERATOR_TOKEN" "X-NUMBER-OPERATOR-TOKEN")]
            (send! exchange status body)
-           (if (and (= "POST" method) (= "proposals" (first parts))
-                    (= "decide" (nth parts 2 nil)) (= 3 (count parts)))
+           (cond
+             (and (= "POST" method) (= "proposals" (first parts))
+                  (= "decide" (nth parts 2 nil)) (= 3 (count parts)))
              (send! exchange 200 (decide! (second parts) (decode-body exchange)))
-             (send! exchange 404 {:status "unknown"})))))))
+
+             (and (= "POST" method) (= "proposals" (first parts))
+                  (= "reconcile" (nth parts 2 nil)) (= 3 (count parts)))
+             (send! exchange 200
+                    (reconcile-order! (second parts) (decode-body exchange)))
+
+             :else (send! exchange 404 {:status "unknown"})))))))
 
 #?(:clj
    (defn- server [port handler]
@@ -247,4 +265,3 @@
                      " operator=127.0.0.1:" operator-port
                      " provider=" (name (:mode (provider-config)))))
        @(promise))))
-
