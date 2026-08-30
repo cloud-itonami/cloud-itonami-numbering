@@ -1,0 +1,36 @@
+{:actor/id "cloud-itonami-numbering"
+ :actor/name "Cloud Itonami Numbering"
+ :actor/role :governed-numbering-service
+ :actor/purpose "Search Telnyx inventory and, after separate owner Passkey consent and named operator approval, assign a phone number to an agent or bot route."
+ :actor/runtime :cljc
+ :actor/maturity :r1-local-qualified
+ :actor/reach
+ {:inventory-search :provider-contract
+  :consent-surface :implemented
+  :operator-surface :implemented
+  :mock-actuation :qualified
+  :telnyx-actuation :implemented-unexercised
+  :live-number :unverified}
+ :actor/listeners
+ [{:surface :consent :bind "127.0.0.1" :port 1345
+   :auth-header "X-NUMBER-CONSENT-TOKEN"}
+  {:surface :operator :bind "127.0.0.1" :port 1346
+   :auth-header "X-NUMBER-OPERATOR-TOKEN"}]
+ :actor/gates
+ [{:gate/id "G1" :gate/name "passkey-consent-bound"
+   :gate/rule "approved envelope, digest, approved-at and Passkey credential id are required"}
+  {:gate/id "G2" :gate/name "operator-separated"
+   :gate/rule "purchase and release require a named decision on a different listener"}
+  {:gate/id "G3" :gate/name "quote-bound"
+   :gate/rule "provider, upfront, monthly, currency and observation time are consent-bound and capped"}
+  {:gate/id "G4" :gate/name "owner-not-assignee"
+   :gate/rule "owner subject retains control; agent/bot receives only the route"}
+  {:gate/id "G5" :gate/name "regulatory-fail-closed"
+   :gate/rule "+81 orders need a requirement group or bundle and provider requirements_met"}
+  {:gate/id "G6" :gate/name "quarantine-on-release"
+   :gate/rule "release never returns a number directly to the allocation pool"}
+  {:gate/id "G7" :gate/name "no-secret-ledger"
+   :gate/rule "provider and listener secrets are environment-only"}
+  {:gate/id "G8" :gate/name "truthful-actuation-state"
+   :gate/rule "approval, provider pending/failure and successful purchase are distinct states"}]}
+

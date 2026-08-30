@@ -1,0 +1,23 @@
+{:paths ["src"]
+ :deps
+ {org.clojure/clojure {:mvn/version "1.12.5"}
+  io.github.kotoba-lang/phone
+  {:git/url "https://github.com/kotoba-lang/phone.git"
+   :git/sha "9626a93bd26615f7924c0000b204d955b7f64556"}
+  io.github.kotoba-lang/json
+  {:git/url "https://github.com/kotoba-lang/json.git"
+   :git/sha "840c35b59f6f259c9349611b08611667f37c2be8"}}
+ :aliases
+ {:dev {:override-deps
+        {io.github.kotoba-lang/phone {:local/root "../../kotoba-lang/phone"}
+         io.github.kotoba-lang/json {:local/root "../../kotoba-lang/json"}}}
+  :test {:extra-paths ["test"]
+         :extra-deps {io.github.cognitect-labs/test-runner
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]
+         :exec-fn cognitect.test-runner.api/test}
+  :serve {:main-opts ["-m" "numbering.http"]}
+  :lint {:replace-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test"
+                     "--fail-level" "error"]}}}
+
