@@ -27,7 +27,8 @@ layer rather than moving provider credentials into any of those components.
   digest and is refused.
 - Real Telnyx activation still requires account credentials, regulatory
   coordinates and an explicit deployment opt-in.
+- A normal Telnyx `pending` order is reconciled by a named operator using its
+  provider order id and cannot create a second order.
 - The local durable plane is a single atomic EDN file at R1. Shared Kotobase
-  persistence and automatic reconciliation of an interrupted provider order
-  remain separate maturity steps.
-
+  persistence and automatic discovery of a provider call interrupted before
+  its response was saved remain separate maturity steps.

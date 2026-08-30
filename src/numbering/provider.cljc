@@ -66,6 +66,11 @@
                         :requirements_met true
                         :phone_numbers [{:id (str "mock-number-" reference)
                                          :phone_number msisdn}]}}})
+    :number/allocate-status
+    {:ok? true :status 200
+     :payload {:data {:id (str "mock-order-" reference)
+                      :status "success"
+                      :requirements_met true
+                      :phone_numbers [{:id (str "mock-number-" reference)}]}}}
     :number/release {:ok? true :status 200 :payload {:data {:deleted true}}}
     {:ok? false :status 422 :error "mock provider does not support this op"}))
-

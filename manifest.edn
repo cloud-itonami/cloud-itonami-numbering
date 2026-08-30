@@ -9,6 +9,7 @@
   :consent-surface :implemented
   :operator-surface :implemented
   :mock-actuation :qualified
+  :order-reconciliation :operator-qualified
   :telnyx-actuation :implemented-unexercised
   :live-number :unverified}
  :actor/listeners
@@ -33,4 +34,3 @@
    :gate/rule "provider and listener secrets are environment-only"}
   {:gate/id "G8" :gate/name "truthful-actuation-state"
    :gate/rule "approval, provider pending/failure and successful purchase are distinct states"}]}
-
