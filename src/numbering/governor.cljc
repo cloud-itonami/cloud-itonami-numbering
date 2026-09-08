@@ -4,7 +4,7 @@
   The owner is the Passkey subject. The assignee is an agent/bot DID or actor
   target that receives calls and messages. Keeping those separate means a bot
   can use a number without becoming able to transfer or release it."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [kotoba.phone :as phone]
             [kotoba.phone.numbering :as numbering]))
 

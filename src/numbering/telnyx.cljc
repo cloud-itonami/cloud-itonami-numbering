@@ -5,7 +5,7 @@
   not carry it, so logging a request cannot log a credential. The shapes follow
   Telnyx's official OpenAPI document; provider inventory, prices and regulatory
   admission remain observations, never constants."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [kotoba.phone :as phone]))
 
 (def api-base "https://api.telnyx.com/v2")
@@ -22,7 +22,7 @@
     :or {country-code "JP" features ["voice"] limit 10}}]
   (let [features (->> features (map name) (filter supported-features) distinct vec)
         limit (-> limit (or 10) long (max 1) (min 100))
-        params (cond-> [["filter[country_code]" (str/upper-case country-code)]
+        params (cond-> [["filter[country_code]" (str/upper country-code)]
                         ["filter[limit]" limit]
                         ["filter[exclude_held_numbers]" "true"]]
                  number-type (conj ["filter[phone_number_type]" (name number-type)])

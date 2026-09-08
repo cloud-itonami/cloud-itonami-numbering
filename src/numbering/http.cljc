@@ -5,7 +5,7 @@
   submit and inspect an already Passkey-approved proposal, but cannot reach the
   decide route. The operator token can decide, but is never accepted by the
   consent listener as a substitute."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [kotoba.lang.json :as json]
             [numbering.persistence :as persistence]
             [numbering.provider :as provider]
