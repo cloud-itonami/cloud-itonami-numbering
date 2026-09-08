@@ -5,7 +5,7 @@
   and returns an effect only after approval. `complete` records the provider
   outcome. The host performs that effect between decide and complete, so tests
   can prove that consent alone cannot spend money or acquire a number."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [kotoba.phone.lifecycle :as lifecycle]
             [kotoba.phone.numbering :as numbering]
             [numbering.governor :as governor]
