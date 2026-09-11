@@ -65,12 +65,12 @@ HTTP surface 自体が分離されています。
 ## Run
 
 ```bash
-clojure -M:dev:test
+kbb -M:dev:test
 
 NUMBER_CONSENT_TOKEN=... \
 NUMBER_OPERATOR_TOKEN=... \
 NUMBERING_ACTUATOR=mock \
-clojure -M:dev:serve
+kbb -M:dev:serve
 ```
 
 mock はネットワークも課金も発生させません。実 Telnyx は明示 opt-in です:
@@ -122,9 +122,9 @@ provider が pending を返した場合は order id を保存し、operator surf
 ## Verification
 
 ```bash
-clojure -M:dev:test
-clojure -M:lint
-nbb --classpath ".:../../../../scripts:../../../../scripts/nbb_compat" \
+kbb -M:dev:test
+kbb -M:lint
+kbb --backend sci --classpath ".:../../../../scripts:../../../../scripts/nbb_compat" \
   ../../../../scripts/jvm_new_surface_policy.cljs self-test
 ```
 
