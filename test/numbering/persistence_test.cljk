@@ -1,5 +1,5 @@
 (ns numbering.persistence-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [numbering.persistence :as persistence]
             [numbering.store :as store])
   (:import [java.nio.file Files]))
