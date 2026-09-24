@@ -1,7 +1,7 @@
 (ns numbering.persistence
   "Small durable host seam for the R0 service. Writes the actor map atomically;
   secrets never enter that map."
-  (:require [clojure.edn :as edn]
+  (:require [kotoba.lang.edn :as edn]
             [numbering.store :as store])
   #?(:clj (:import [java.nio.charset StandardCharsets]
                    [java.nio.file Files Path Paths StandardCopyOption]
