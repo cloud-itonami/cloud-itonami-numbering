@@ -1,6 +1,6 @@
 (ns numbering.service-test
   (:require [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [numbering.governor :as governor]
             [numbering.provider :as provider]
             [numbering.service :as service]
