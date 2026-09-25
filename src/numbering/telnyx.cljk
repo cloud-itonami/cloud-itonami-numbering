@@ -5,7 +5,7 @@
   not carry it, so logging a request cannot log a credential. The shapes follow
   Telnyx's official OpenAPI document; provider inventory, prices and regulatory
   admission remain observations, never constants."
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.http.form-urlencoded :as form-urlencoded] [kotoba.lang.text :as str]
             [kotoba.phone :as phone]))
 
 (def api-base "https://api.telnyx.com/v2")
@@ -14,7 +14,7 @@
 (def supported-features #{"voice" "sms" "mms" "fax" "hd_voice" "local_calling"})
 
 (defn- encode-component [x]
-  #?(:clj (java.net.URLEncoder/encode (str x) "UTF-8")
+  #?(:clj (form-urlencoded/form-encode (str x))
      :cljs (js/encodeURIComponent (str x))))
 
 (defn search-request
