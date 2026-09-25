@@ -5,7 +5,7 @@
   submit and inspect an already Passkey-approved proposal, but cannot reach the
   decide route. The operator token can decide, but is never accepted by the
   consent listener as a substitute."
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.http.form-urlencoded :as form-urlencoded] [kotoba.bytes :as kbytes] [kotoba.lang.text :as str]
             [kotoba.lang.json :as json]
             [numbering.persistence :as persistence]
             [numbering.provider :as provider]
@@ -13,8 +13,7 @@
             [numbering.store :as store]
             [numbering.telnyx :as telnyx])
   #?(:clj (:import [com.sun.net.httpserver HttpExchange HttpHandler HttpServer]
-                   [java.net InetSocketAddress URLDecoder]
-                   [java.nio.charset StandardCharsets]
+                   [java.net InetSocketAddress]
                    [java.util.concurrent Executors])))
 
 #?(:clj (defonce runtime (atom (store/empty-state))))
@@ -73,12 +72,12 @@
 
 #?(:clj
    (defn- decode-body [^HttpExchange exchange]
-     (let [body (String. (.readAllBytes (.getRequestBody exchange)) StandardCharsets/UTF_8)]
+     (let [body (kbytes/utf8-string (.readAllBytes (.getRequestBody exchange)))]
        (if (str/blank? body) {} (-> body json/decode keywordize)))))
 
 #?(:clj
    (defn- send! [^HttpExchange exchange status payload]
-     (let [bytes (.getBytes (json/encode (wire payload)) StandardCharsets/UTF_8)]
+     (let [bytes (kbytes/utf8-bytes (json/encode (wire payload)))]
        (.set (.getResponseHeaders exchange) "Content-Type" "application/json; charset=utf-8")
        (.sendResponseHeaders exchange status (long (count bytes)))
        (with-open [out (.getResponseBody exchange)] (.write out bytes)))))
@@ -104,8 +103,8 @@
            (into {}
                  (map (fn [part]
                         (let [[k v] (str/split part #"=" 2)]
-                          [(keyword (URLDecoder/decode k "UTF-8"))
-                           (URLDecoder/decode (or v "") "UTF-8")]))
+                          [(keyword (form-urlencoded/form-decode k))
+                           (form-urlencoded/form-decode (or v ""))]))
                       (str/split q #"&")))))))
 
 #?(:clj
